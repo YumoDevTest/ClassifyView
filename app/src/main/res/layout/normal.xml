@@ -5,11 +5,31 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.anarchy.classify.ClassifyView
-        android:id="@+id/classify_view"
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-    </com.anarchy.classify.ClassifyView>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
 
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="80dp" />
+
+            <com.anarchy.classify.ClassifyView
+                android:id="@+id/classify_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+            </com.anarchy.classify.ClassifyView>
+
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="80dp" />
+
+        </LinearLayout>
+    </ScrollView>
 </RelativeLayout>

@@ -38,7 +38,7 @@ public class ViewPagerFragment extends BaseFragment{
 
         @Override
         public Fragment getItem(int position) {
-            return new NormalFragment();
+            return new NormalFragment1();
         }
 
         @Override

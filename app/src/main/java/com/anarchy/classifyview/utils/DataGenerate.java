@@ -17,7 +17,7 @@ import java.util.List;
 public class DataGenerate {
     public static List<List<Bean>> generateBean(){
         List<List<Bean>> data = new ArrayList<>();
-        for(int i=0;i<30;i++){
+        for(int i=0;i<300;i++){
             List<Bean> inner = new ArrayList<>();
             if(i>10) {
                 int c = (int) (Math.random() * 15+1);
@@ -31,6 +31,7 @@ public class DataGenerate {
         }
         return data;
     }
+
     public static List<BaseBean> generateBaseBean(){
         List<BaseBean> data = new ArrayList<>();
         for(int i=0;i<6;i++){

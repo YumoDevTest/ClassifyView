@@ -93,7 +93,7 @@ public class ClassifyView extends FrameLayout {
     }
     @IntDef(value = {IN_MAIN_REGION,IN_SUB_REGION, UNKNOWN_REGION,SUB_REGION_LEAVE_TYPE},flag = true)
     @Retention(RetentionPolicy.SOURCE)
-    private @interface Region{
+    public @interface Region{
 
     }
     @IntDef({STATE_IDLE,STATE_DRAG, STATE_SETTLE})
@@ -107,9 +107,7 @@ public class ClassifyView extends FrameLayout {
 
     }
 
-
-
-
+    //处于滑动模式
     public boolean inScrollMode;
 
 
@@ -139,7 +137,9 @@ public class ClassifyView extends FrameLayout {
     private RecyclerView mMainRecyclerView;
     private RecyclerView mSubRecyclerView;
 
+    //主层级目录的列数
     private int mMainSpanCount;
+    //次级层级目录的列数
     private int mSubSpanCount;
     private GestureDetectorCompat mMainGestureDetector;
     private GestureDetectorCompat mSubGestureDetector;
@@ -150,9 +150,12 @@ public class ClassifyView extends FrameLayout {
     private MainRecyclerViewCallBack mMainCallBack;
     private SubRecyclerViewCallBack mSubCallBack;
 
+    //次级目录的高度占主层级的高度比例
     private float mSubRatio;
     private int mMainActivePointerId = ACTIVE_POINTER_ID_NONE;
     private int mSubActivePointerId = ACTIVE_POINTER_ID_NONE;
+
+    //合并动画的时间
     private int mAnimationDuration;
 
 
@@ -181,9 +184,13 @@ public class ClassifyView extends FrameLayout {
     @Region
     private int mRegion;
     private int mGravity;
+    //当item处于被拖拽状态时X轴方向缩放比例
     private float mDragScaleX;
+    //当item处于被拖拽状态时Y轴方向缩放比例
     private float mDragScaleY;
+    //当被拖拽的item处于可合并状态时X轴方向缩放比例
     private float mDragInMergeScaleX;
+    //当被拖拽的item处于可合并状态时X轴方向缩放比例
     private float mDragInMergeScaleY;
     /**
      * 储存所有进入了merge状态的position
@@ -250,6 +257,7 @@ public class ClassifyView extends FrameLayout {
         int subPaddingBottom = a.getDimensionPixelSize(R.styleable.ClassifyView_SubPaddingBottom,0);
         boolean subClipToPadding = a.getBoolean(R.styleable.ClassifyView_SubClipToPadding,true);
         a.recycle();
+        //main
         mMainRecyclerView = getMain(context, attrs);
         if(mainPadding != 0){
             mMainRecyclerView.setPadding(mainPadding,mainPadding,mainPadding,mainPadding);
@@ -257,6 +265,8 @@ public class ClassifyView extends FrameLayout {
             mMainRecyclerView.setPadding(mainPaddingLeft,mainPaddingTop,mainPaddingRight,mainPaddingBottom);
         }
         mMainRecyclerView.setClipToPadding(mainClipToPadding);
+
+        //sub
         mSubRecyclerView = getSub(context, attrs);
         if(subPadding > 0){
             mSubRecyclerView.setPadding(subPadding,subPadding,subPadding,subPadding);
@@ -264,6 +274,8 @@ public class ClassifyView extends FrameLayout {
             mSubRecyclerView.setPadding(subPaddingLeft,subPaddingTop,subPaddingRight,subPaddingBottom);
         }
         mSubRecyclerView.setClipToPadding(subClipToPadding);
+
+
         mMainContainer.addView(mMainRecyclerView);
         mWindowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
         addViewInLayout(mMainContainer, 0, mMainContainer.getLayoutParams());
