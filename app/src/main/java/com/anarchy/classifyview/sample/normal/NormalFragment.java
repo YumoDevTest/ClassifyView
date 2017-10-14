@@ -36,7 +36,7 @@ public class NormalFragment extends BaseFragment{
         mClassifyView.addDragListener(new ClassifyView.DragListener() {
             @Override
             public void onDragStart(ViewGroup parent, View selectedView, float startX, float startY, @ClassifyView.Region int region) {
-                Log.i(Define.LOG_TAG, "onDragStart:");
+                Log.i(Define.LOG_TAG, "onDragStart:"+startX+" "+startY+" "+region);
             }
 
             @Override
