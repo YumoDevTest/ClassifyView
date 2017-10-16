@@ -159,14 +159,32 @@ public class ClassifyView extends FrameLayout {
     private int mAnimationDuration;
 
 
+    /**
+     *  选中拖动的Selected的初始位置
+     */
     private int mSelectedStartX;
     private int mSelectedStartY;
+    /**
+     * 触摸选中的SelectedView的第一次触摸位置。
+     */
     private float mInitialTouchX;
     private float mInitialTouchY;
+    /**
+     * 状态栏高度
+     */
     private int mStatusBarHeight;
+    /**
+     *
+     */
     private float mDx;
     private float mDy;
+    /**
+     * 选中拖动的View
+     */
     private View mSelected;
+    /**
+     * 选中拖动的View在RecyclerView中的位置。
+     */
     private int mSelectedPosition;
     private Dialog mSubDialog;
     private WindowManager mWindowManager;
@@ -489,6 +507,11 @@ public class ClassifyView extends FrameLayout {
                 return true;
             }
 
+            /**
+             * 点击事件
+             * @param e
+             * @return
+             */
             @Override
             public boolean onSingleTapConfirmed(MotionEvent e) {
                 View pressedView = findChildView(mMainRecyclerView, e);
@@ -520,6 +543,7 @@ public class ClassifyView extends FrameLayout {
                         mSelectedStartX = pressedView.getLeft();
                         mSelectedStartY = pressedView.getTop();
                         mDx = mDy = 0f;
+                        logInfo("main onLongPress: ");
                         int index = MotionEventCompat.findPointerIndex(e, mMainActivePointerId);
                         mInitialTouchX = MotionEventCompat.getX(e, index);
                         mInitialTouchY = MotionEventCompat.getY(e, index);
@@ -928,11 +952,12 @@ public class ClassifyView extends FrameLayout {
             int height = mSelected.getHeight();
             float x = event.getX();
             float y = event.getY();
-//            L.d("Main onDrag X:%1$s,Y:%2$s", x, y);
+            L.d("Main onDrag X:%1$s,Y:%2$s", x, y);
             float centerX = x - width / 2;
             float centerY = y - height / 2;
             switch (action) {
                 case DragEvent.ACTION_DRAG_STARTED:
+                    L.d("mainDragListener, ACTION_DRAG_STARTED");
                     if ((mRegion & IN_MAIN_REGION) != 0) {
                         if(mState == STATE_DRAG){
                             L.d("already have item in drag state");
@@ -954,6 +979,7 @@ public class ClassifyView extends FrameLayout {
                     }
                     break;
                 case DragEvent.ACTION_DRAG_LOCATION:
+                    L.d("mainDragListener, ACTION_DRAG_LOCATION");
                     if(mRegion == UNKNOWN_REGION) break;
                     mVelocityTracker.addMovement(MotionEvent.obtain(SystemClock.uptimeMillis(), SystemClock.uptimeMillis(),
                             MotionEvent.ACTION_MOVE, x, y, 0));
@@ -972,6 +998,7 @@ public class ClassifyView extends FrameLayout {
                     }
                     break;
                 case DragEvent.ACTION_DRAG_ENDED:
+                    L.d("mainDragListener, ACTION_DRAG_ENDED"+mergeSuccess);
                     L.d("main ended");
                     if (mergeSuccess) {
                         mergeSuccess = false;
@@ -986,8 +1013,10 @@ public class ClassifyView extends FrameLayout {
                     releaseVelocityTracker();
                     break;
                 case DragEvent.ACTION_DRAG_EXITED:
+                    L.d("mainDragListener, ACTION_DRAG_EXITED");
                     break;
                 case DragEvent.ACTION_DROP:
+                    L.d("mainDragListener, ACTION_DROP:"+inMergeState);
                     if (inMergeState) {
                         inMergeState = false;
                         if (mInMergeQueue.isEmpty()) break;
@@ -1226,7 +1255,7 @@ public class ClassifyView extends FrameLayout {
         mDragView.setScaleX(1f);
         mDragView.setScaleY(1f);
         mDragView.setTranslationX(0f);
-        mDragView.setTranslationX(0f);
+        mDragView.setTranslationY(0);
         if (mDragViewIsShow) {
             mWindowManager.removeViewImmediate(mDragView);
             mDragViewIsShow = false;
@@ -1386,6 +1415,7 @@ public class ClassifyView extends FrameLayout {
         @Override
         public void run() {
             if (mSelected != null && scrollIfNecessary()) {
+                L.d("mScrollRunnable:"+inScrollMode);
                 inScrollMode = true;
                 if (mSelected != null) { //it might be lost during scrolling
                     moveIfNecessary(mSelected);
@@ -1402,6 +1432,7 @@ public class ClassifyView extends FrameLayout {
     private void moveIfNecessary(View view) {
         final int x = (int) (mSelectedStartX + mDx);
         final int y = (int) (mSelectedStartY + mDy);
+        logInfo("moveIfNecessary x:"+x+" y: "+y);
         //如果移动范围在自身范围内
         if (Math.abs(y - view.getTop()) < view.getHeight() * 0.5f
                 && Math.abs(x - view.getLeft())
@@ -1610,6 +1641,20 @@ public class ClassifyView extends FrameLayout {
 //            }
         }
         return winner;
+    }
+
+    private void logInfo(String tag){
+        StringBuilder sb = new StringBuilder();
+        sb.append(tag+" ");
+        sb.append(" mSelectedStartX:"+mSelectedStartX);
+        sb.append(" mSelectedStartY:"+mSelectedStartY);
+        sb.append(" mDx:"+mDx);
+        sb.append(" mDy:"+mDy);
+        sb.append(" mInitialTouchX:"+mInitialTouchX);
+        sb.append(" mInitialTouchY:"+mInitialTouchY);
+        sb.append(" mSelectedPosition:"+mSelectedPosition);
+        sb.toString();
+        L.d(sb.toString());
     }
 
     /**
