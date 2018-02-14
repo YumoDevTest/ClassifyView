@@ -22,6 +22,7 @@ import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.DragEvent;
 import android.view.GestureDetector;
 import android.view.Gravity;
@@ -75,12 +76,18 @@ public class ClassifyView extends FrameLayout {
     public static final int STATE_DRAG = 1;
     public static final int STATE_SETTLE = 2;
 
+    /**
+     * 所在屏幕区域，在文件夹和屏幕区。
+     */
     public static final int UNKNOWN_REGION = 0;
     public static final int IN_MAIN_REGION = 1;
     public static final int IN_SUB_REGION = 2;
     public static final int SUB_REGION_LEAVE_TYPE = 0x10;
 
 
+    /**
+     * 移动方式
+     */
     public static final int LEFT_TOP = 0;
     public static final int RIGHT_TOP = 1;
     public static final int LEFT_BOTTOM = 2;
@@ -91,16 +98,19 @@ public class ClassifyView extends FrameLayout {
     @Retention(RetentionPolicy.SOURCE)
     public @interface MoveState {
     }
+
     @IntDef(value = {IN_MAIN_REGION,IN_SUB_REGION, UNKNOWN_REGION,SUB_REGION_LEAVE_TYPE},flag = true)
     @Retention(RetentionPolicy.SOURCE)
     public @interface Region{
 
     }
+
     @IntDef({STATE_IDLE,STATE_DRAG, STATE_SETTLE})
     @Retention(RetentionPolicy.SOURCE)
     private @interface State{
 
     }
+
     @IntDef({CENTER,LEFT_TOP,RIGHT_TOP,LEFT_BOTTOM,RIGHT_BOTTOM})
     @Retention(RetentionPolicy.SOURCE)
     private @interface MyGravity{
@@ -115,8 +125,11 @@ public class ClassifyView extends FrameLayout {
     private static final String DESCRIPTION = "Long press";
     private static final String MAIN = "main";
     private static final String SUB = "sub";
+
+
     private static final long DEFAULT_DELAYED = 150;
 
+    //RecyclerView 的动画执行时间
     private static final int CHANGE_DURATION = 10;
 
 
@@ -125,7 +138,7 @@ public class ClassifyView extends FrameLayout {
      */
     private ViewGroup mMainContainer;
     /**
-     * 放置次级RecyclerView的容器
+     * 放置次级RecyclerView的容器-文件夹
      */
     private ViewGroup mSubContainer;
     /**
@@ -183,6 +196,7 @@ public class ClassifyView extends FrameLayout {
     private int mState;
     @Region
     private int mRegion;
+    // 合并方向
     private int mGravity;
     //当item处于被拖拽状态时X轴方向缩放比例
     private float mDragScaleX;
@@ -230,9 +244,7 @@ public class ClassifyView extends FrameLayout {
      * 初始化容器
      */
     private void init(Context context, AttributeSet attrs, int defStyleAttr) {
-        mMainContainer = new FrameLayout(context);
-        mSubContainer = new FrameLayout(context);
-        mMainContainer.setLayoutParams(new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.ClassifyView, defStyleAttr, R.style.DefaultStyle);
         mSubRatio = a.getFraction(R.styleable.ClassifyView_SubRatio, 1, 1, 0.7f);
         mMainSpanCount = a.getInt(R.styleable.ClassifyView_MainSpanCount, 3);
@@ -266,7 +278,16 @@ public class ClassifyView extends FrameLayout {
         }
         mMainRecyclerView.setClipToPadding(mainClipToPadding);
 
+
+        //mMainContainer
+        mMainContainer = new FrameLayout(context);
+        mMainContainer.setLayoutParams(new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+        mMainContainer.addView(mMainRecyclerView);
+        mWindowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        addViewInLayout(mMainContainer, 0, mMainContainer.getLayoutParams());
+
         //sub
+        mSubContainer = new FrameLayout(context);
         mSubRecyclerView = getSub(context, attrs);
         if(subPadding > 0){
             mSubRecyclerView.setPadding(subPadding,subPadding,subPadding,subPadding);
@@ -275,11 +296,10 @@ public class ClassifyView extends FrameLayout {
         }
         mSubRecyclerView.setClipToPadding(subClipToPadding);
 
-
-        mMainContainer.addView(mMainRecyclerView);
-        mWindowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-        addViewInLayout(mMainContainer, 0, mMainContainer.getLayoutParams());
+        //创建拖拽的View
         mDragView = new View(context);
+
+        //状态Id
         int id = getResources().getIdentifier("status_bar_height", "dimen", "android");
         if (id > 0) {
             mStatusBarHeight = getResources().getDimensionPixelSize(id);
@@ -922,6 +942,7 @@ public class ClassifyView extends FrameLayout {
     class MainDragListener implements View.OnDragListener {
         @Override
         public boolean onDrag(View v, DragEvent event) {
+            L.d(v.getClass().getSimpleName()+" "+event.getX()+" "+event.getY()+ event.getAction());
             if (mSelected == null) return false;
             int action = event.getAction();
             int width = mSelected.getWidth();
@@ -933,6 +954,7 @@ public class ClassifyView extends FrameLayout {
             float centerY = y - height / 2;
             switch (action) {
                 case DragEvent.ACTION_DRAG_STARTED:
+                    L.d("Main:Action_drag_started");
                     if ((mRegion & IN_MAIN_REGION) != 0) {
                         if(mState == STATE_DRAG){
                             L.d("already have item in drag state");
@@ -954,6 +976,7 @@ public class ClassifyView extends FrameLayout {
                     }
                     break;
                 case DragEvent.ACTION_DRAG_LOCATION:
+                    L.d("Main:Action_drag_location");
                     if(mRegion == UNKNOWN_REGION) break;
                     mVelocityTracker.addMovement(MotionEvent.obtain(SystemClock.uptimeMillis(), SystemClock.uptimeMillis(),
                             MotionEvent.ACTION_MOVE, x, y, 0));
@@ -986,8 +1009,10 @@ public class ClassifyView extends FrameLayout {
                     releaseVelocityTracker();
                     break;
                 case DragEvent.ACTION_DRAG_EXITED:
+                    L.d("Main:Action_drag_exited");
                     break;
                 case DragEvent.ACTION_DROP:
+                    L.d("Main:Action_drag_drop");
                     if (inMergeState) {
                         inMergeState = false;
                         if (mInMergeQueue.isEmpty()) break;
@@ -1412,6 +1437,7 @@ public class ClassifyView extends FrameLayout {
         if (swapTargets.size() == 0) return;
         View target = chooseTarget(view, swapTargets, x, y);
         if (target == null) return;
+        L.d("moveIfNecessary:"+target.getClass().getSimpleName());
         if ((mRegion & IN_SUB_REGION) != 0) {//次级目录下 没有merge形式
             int targetPosition = mSubRecyclerView.getChildAdapterPosition(target);
             int state = mSubCallBack.getCurrentState(mSelected, target, x, y, mVelocityTracker, mSelectedPosition,
@@ -1428,6 +1454,7 @@ public class ClassifyView extends FrameLayout {
         }
         if ((mRegion & IN_MAIN_REGION) != 0) {//在主层级下 有merge状况 以及次级目录拖动到主层级的状况
             int targetPosition = mMainRecyclerView.getChildAdapterPosition(target);
+            L.d("moveIfNecessary:mainRegin: "+targetPosition);
             while (!mInMergeQueue.isEmpty() && mInMergeQueue.peek() != targetPosition) {
                 int i = mInMergeQueue.poll();
                 mMainCallBack.onMergeCancel(mMainRecyclerView, mSelectedPosition, i);

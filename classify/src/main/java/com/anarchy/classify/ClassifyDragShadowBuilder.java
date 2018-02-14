@@ -35,6 +35,5 @@ public class ClassifyDragShadowBuilder extends View.DragShadowBuilder {
     }
 
     public void showShadow(){
-
     }
 }
