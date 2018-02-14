@@ -14,9 +14,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.PopupWindow;
-
-import com.anarchy.classify.ClassifyView;
 import com.anarchy.classifyview.R;
 import com.anarchy.classifyview.core.BaseFragment;
 import com.anarchy.classifyview.databinding.ExtraIreaderBottomBarBinding;

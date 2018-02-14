@@ -17,6 +17,7 @@ public class L {
             Log.d(TAG,msg);
         }
     }
+
     public static void d(String msg,Object... objects){
         if(DEBUG){
             Log.d(TAG,String.format(msg,objects));
