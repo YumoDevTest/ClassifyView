@@ -473,6 +473,12 @@ public class ClassifyView extends FrameLayout {
         getSubRecyclerView().setRecycledViewPool(viewPool);
     }
 
+    /**
+     * 在RecyclerView查看View。
+     * @param recyclerView
+     * @param event
+     * @return
+     */
     private View findChildView(RecyclerView recyclerView, MotionEvent event) {
         // first check elevated views, if none, then call RV
         final float x = event.getX();
@@ -713,6 +719,7 @@ public class ClassifyView extends FrameLayout {
                 int height = mSelected.getHeight();
                 int width = mSelected.getWidth();
                 int action = MotionEventCompat.getActionMasked(e);
+                L.d("x:"+x+" y:"+y+" rX"+rawX+" rY:"+rawY+" width:"+width+" height:"+height);
                 switch (action) {
                     case MotionEvent.ACTION_MOVE:
                         if(mRegion == UNKNOWN_REGION) break;
@@ -962,6 +969,7 @@ public class ClassifyView extends FrameLayout {
 
     /**
      * 监听在拖拽的View在主层级移动的逻辑处理
+     * 主层级使用View.onDragListener,次级没有使用该逻辑。
      */
     class MainDragListener implements View.OnDragListener {
         @Override
@@ -1097,7 +1105,16 @@ public class ClassifyView extends FrameLayout {
     }
 
 
-
+    /**
+     * 文件夹内部开启动画
+     * @param recyclerView
+     * @param selected
+     * @param selectedPosition
+     * @param targetX
+     * @param targetY
+     * @param fixWindowLocation
+     * @param callBack
+     */
     private void doStartDragWithAnimation(final RecyclerView recyclerView,final View selected, final int selectedPosition, final float targetX, final float targetY, @NonNull final int[] fixWindowLocation, final BaseCallBack callBack) {
         final int recordRegion = mRegion;//记录当前位置 动画中让位置信息处于位置区域
         selected.post(new Runnable() {
@@ -1459,9 +1476,9 @@ public class ClassifyView extends FrameLayout {
     private boolean inMergeState = false;
 
     private void moveIfNecessary(View view) {
-        final int x = (int) (mSelectedStartX + mDx);
-        final int y = (int) (mSelectedStartY + mDy);
-        logInfo("moveIfNecessary x:"+x+" y: "+y);
+        final int x = (int) (mSelectedStartX + mDx);//dragView, getLeft
+        final int y = (int) (mSelectedStartY + mDy);//dragView, getTop
+        logInfo("moveIfNecessary x:"+x+" y: "+y+" left:"+view.getLeft()+ " top:"+view.getTop());
         //如果移动范围在自身范围内
         if (Math.abs(y - view.getTop()) < view.getHeight() * 0.5f
                 && Math.abs(x - view.getLeft())
@@ -1543,7 +1560,7 @@ public class ClassifyView extends FrameLayout {
 
     /**
      * 找到当前移动View 有覆盖的view
-     *
+     * 可能有多个
      * @return
      */
     private List<View> findSwapTargets(View view) {

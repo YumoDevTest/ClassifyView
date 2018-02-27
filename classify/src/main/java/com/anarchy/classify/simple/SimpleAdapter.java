@@ -58,6 +58,7 @@ public abstract class SimpleAdapter<T, VH extends SimpleAdapter.ViewHolder> exte
         return mData.get(parentPosition);
     }
 
+    //是否可以展开，是否为文件夹
     @Override
     protected boolean canExplodeItem(int position, View pressedView) {
         if (position < mData.size() && mData.get(position).size() > 1) {
@@ -80,6 +81,12 @@ public abstract class SimpleAdapter<T, VH extends SimpleAdapter.ViewHolder> exte
     }
 
 
+    /**
+     * 文件夹中交互数据
+     * @param ts
+     * @param selectedPosition 当前选择的item位置
+     * @param targetPosition   要移动到的位置
+     */
     @Override
     protected void onSubMove(List<T> ts, int selectedPosition, int targetPosition) {
         ts.add(targetPosition, ts.remove(selectedPosition));
